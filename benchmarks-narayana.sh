@@ -15,9 +15,9 @@ BENCHMARK_COMMON_CONFIG=" -f 4 -wi 10  "
 
 # Narayana sources defitions
 N_VANILLA=${HOME}"/git/narayana-vanilla"
-N_TRACED=
+N_TRACED=${HOME}"/git/narayana"
 N_NOOP_TRACED=${HOME}"/git/narayana"
-N_FILE_LOGGED=
+N_FILE_LOGGED=${HOME}"/git/narayana"
 
 function prepareEnv {
     # create a folder into which all the perf test results will be dumped into
@@ -49,10 +49,13 @@ function run {
     
     # Narayana which is patched with a series of logging statements
     # on the exact same places as tracing. The logger is set up so
-    # that everything is written to a log file.
-    #runFileLoggedNarayana 
+    # that everything is written to a log file, no other log statements
+    # are produced.
+    runSuite "$N_FILE_LOGGED"  "narayana-file-logged" "file-log-benchmark"
     
-    #runTracedNarayana
+    TRACING=jaeger
+    runSuite "$N_TRACED" "narayana-traced-jaeger"
+    unset TRACING
 
     # Narayana patched with tracing. No tracers are registered, so this
     # suite will show us how much overhead is caused just by introducing
@@ -88,8 +91,11 @@ function printPerftestSuiteFooter {
 function runSuite {
     loc=$1
     name=$2
+    # which repository branch will we use? use the third optional argument if it's present
+    if [ $# -eq 3 ] ; then branch=$3 ; else branch="master" ; fi
     printPerftestSuiteHeader "$loc" "$name"
     pushd $loc
+    git checkout $branch
     mvn clean install -DskipTests
     pushd $PERF_SUITE_DUMP_LOC
     touch ${name}".csv"

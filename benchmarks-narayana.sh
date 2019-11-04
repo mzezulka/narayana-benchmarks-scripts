@@ -2,12 +2,6 @@
 # This script is intended to be used as a main program
 # for measuring overhead implied by integration of OpenTracing
 # into the Narayana transaction manager.
-#
-# usage: ./benchmarks-narayana.sh [--threads] [--bench-config config]
-# --threads      : tells the script to run benchmarks under various thread numbers (the choice is fixed)
-# --bench-config : what is the benchmark configuration to be passed to the Java benchmark.jar file?
-#                     WARNING: no validation is performed on the string, it is the caller's responsibility
-#                     to ensure the string correctness                       
 set -eux
 
 PERF_SUITE_LOC=${HOME}"/git/narayana-performance/narayana/ArjunaCore/arjuna/target/benchmarks.jar"
@@ -22,8 +16,7 @@ PERF_SUITE_DUMP_LOC="/tmp/narayana-performance-tests-dump"
 #
 # the config below is the default one which is used
 # if no config string is passed to the script
-#BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
-BENCHMARK_COMMON_CONFIG=" -r 1 -f 1 -wi 1 -i 1 "
+BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
 
 # Narayana sources defitions
 N_VANILLA=${HOME}"/git/narayana-vanilla"
@@ -87,8 +80,7 @@ function runSuite {
     popd
     
     pushd $PERF_SUITE_DUMP_LOC
-    #tArr="01 02 04 10 50"
-    tArr="max"
+    tArr="01 02 04 10 50"
     for tNo in $tArr ;
     do
         dump=${name}"-"${tNo}"threads.csv"
@@ -109,7 +101,7 @@ function run {
     prepareEnv    
 
     #Narayana which is cloned from the repo and is left untouched.
-    #runSuite "$N_VANILLA" "vanilla" 
+    runSuite "$N_VANILLA" "vanilla" 
  
     # Narayana which is patched with a series of logging statements
     # on the exact same places as tracing. The logger is set up so
@@ -124,7 +116,7 @@ function run {
     java -jar transformer.jar $filtered
     runSuite "$N_FILE_LOGGED"  "file-logged"    
 
-    runTracingSuite "$N_TRACED" "jaeger"
+    runSuite "$N_TRACED" "jaeger"
 
     # Narayana patched with tracing. No tracers are registered, so this
     # suite will show us how much overhead is caused just by introducing

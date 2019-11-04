@@ -77,10 +77,8 @@ function runSuite {
     loc=$1
     name=$2
     # which repository branch will we use? use the third optional argument if it's present
-    if [ $# -eq 3 ] ; then branch=$3 ; else branch="master" ; fi
     printPerftestSuiteHeader "$loc" "$name"
     pushd $loc
-    git checkout $branch
     mvn clean install -DskipTests
     # compile JMH perf test tool with the most fresh version of Narayana
     # present in the Maven repository
@@ -119,14 +117,14 @@ function run {
     # are produced.
     cp BenchmarkLogger.java ${N_FILE_LOGGED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     filtered=""
-    readarray -d '' filtered < <(find ${N_FILE_LOGGED}/narayana/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     pushd $N_FILE_LOGGED
     git reset --hard
+    readarray -d '' filtered < <(find ${PWD}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     popd
     java -jar transformer.jar $filtered
     runSuite "$N_FILE_LOGGED"  "file-logged"    
 
-    # runTracingSuite "$N_TRACED" "jaeger"
+    runTracingSuite "$N_TRACED" "jaeger"
 
     # Narayana patched with tracing. No tracers are registered, so this
     # suite will show us how much overhead is caused just by introducing

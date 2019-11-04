@@ -21,9 +21,9 @@ def assignRgbTriple(filename):
     shade = str(shadeFromFilename(filename))
     if("file-logged" in filename):
         return "rgb(255, " + shade + ", " + shade + ")"
-    elif("noop-traced" in filename):
+    elif("noop" in filename):
         return "rgb(" + shade + ", " + shade + ", 255)"
-    elif("traced-jaeger" in filename):
+    elif("jaeger" in filename):
         return "rgb(" + shade + ", 255, " + shade + ")"
     elif("vanilla" in filename):
         return "rgb(" + shade + ", " + shade + ", " + shade + ")"

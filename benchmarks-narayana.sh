@@ -103,6 +103,7 @@ function runTracingSuite {
     name=$2
     printPerftestSuiteHeader "$loc" "$name"
     pushd $loc
+    git reset --hard
     mvn clean install -DskipTests
     pushd $PERF_SUITE_DUMP_LOC
     tArr="01 02 04 10 50"
@@ -124,7 +125,7 @@ function run {
     prepareEnv    
 
     #Narayana which is cloned from the repo and is left untouched.
-    runSuite "$N_VANILLA" "vanilla" 
+    #runSuite "$N_VANILLA" "vanilla" 
  
     # Narayana which is patched with a series of logging statements
     # on the exact same places as tracing. The logger is set up so
@@ -132,10 +133,14 @@ function run {
     # are produced.
     cp BenchmarkLogger.java ${N_FILE_LOGGED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     readarray -d '' filtered < <(find ${N_FILE_LOGGED}/narayana/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
+    pushd $N_FILE_LOGGED
+    git reset --hard
+    popd
     java -jar transformer.jar $filtered
-    runSuite "$N_FILE_LOGGED"  "file-logged"
-    
-    runTracingSuite "$N_TRACED" "jaeger"
+    runSuite "$N_FILE_LOGGED"  "file-logged"    
+
+    # runTracingSuite "$N_TRACED" "jaeger"
+
     # Narayana patched with tracing. No tracers are registered, so this
     # suite will show us how much overhead is caused just by introducing
     # the OpenTracing API (a no-op tracer is still registered)

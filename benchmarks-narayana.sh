@@ -22,17 +22,14 @@ PERF_SUITE_DUMP_LOC="/tmp/narayana-performance-tests-dump"
 #
 # the config below is the default one which is used
 # if no config string is passed to the script
-BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
+#BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
+BENCHMARK_COMMON_CONFIG=" -r 1 -f 1 -wi 1 -i 1 "
 
 # Narayana sources defitions
 N_VANILLA=${HOME}"/git/narayana-vanilla"
 N_TRACED=${HOME}"/git/narayana"
 N_NOOP_TRACED=${HOME}"/git/narayana"
 N_FILE_LOGGED=${HOME}"/git/narayana"
-
-function parseArgs {
-    cd .
-}
 
 function prepareEnv {
     # create a folder into which all the perf test results will be dumped into
@@ -87,8 +84,8 @@ function runSuite {
     git checkout $branch
     mvn clean install -DskipTests
     pushd $PERF_SUITE_DUMP_LOC
-    tArr="01 02 04 10 50"
-    #tArr="max"
+    #tArr="01 02 04 10 50"
+    tArr="max"
     for tNo in $tArr ;
     do
         dump=${name}"-"${tNo}"threads.csv"
@@ -104,10 +101,8 @@ function runSuite {
 function runTracingSuite {
     loc=$1
     name=$2
-    if [ $# -eq 3 ] ; then branch=$3 ; else branch="master" ; fi
     printPerftestSuiteHeader "$loc" "$name"
     pushd $loc
-    git checkout $branch
     mvn clean install -DskipTests
     pushd $PERF_SUITE_DUMP_LOC
     tArr="01 02 04 10 50"
@@ -135,7 +130,10 @@ function run {
     # on the exact same places as tracing. The logger is set up so
     # that everything is written to a log file, no other log statements
     # are produced.
-    runSuite "$N_FILE_LOGGED"  "file-logged" "file-log-benchmark"
+    cp BenchmarkLogger.java ${N_FILE_LOGGED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
+    readarray -d '' filtered < <(find ${N_FILE_LOGGED}/narayana/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
+    java -jar transformer.jar $filtered
+    runSuite "$N_FILE_LOGGED"  "file-logged"
     
     runTracingSuite "$N_TRACED" "jaeger"
     # Narayana patched with tracing. No tracers are registered, so this

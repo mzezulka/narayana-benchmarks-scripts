@@ -33,7 +33,6 @@ N_FILE_LOGGED=${HOME}"/git/narayana"
 
 function prepareEnv {
     # create a folder into which all the perf test results will be dumped into
-    parseArgs
     printf ${YELLOW}"##### Preparing the environment #####\n"
     printf $COLOR_OFF
     

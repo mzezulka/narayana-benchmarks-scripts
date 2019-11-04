@@ -82,6 +82,12 @@ function runSuite {
     pushd $loc
     git checkout $branch
     mvn clean install -DskipTests
+    # compile JMH perf test tool with the most fresh version of Narayana
+    # present in the Maven repository
+    pushd ${HOME}"/git/narayana-performance/narayana"
+    mvn clean install -DskipTests
+    popd
+    
     pushd $PERF_SUITE_DUMP_LOC
     #tArr="01 02 04 10 50"
     tArr="max"
@@ -90,32 +96,13 @@ function runSuite {
         dump=${name}"-"${tNo}"threads.csv"
         config="${BENCHMARK_COMMON_CONFIG} -t ${tNo}"
         touch $dump
-        java -jar "$PERF_SUITE_LOC" -rff "$dump" $config
+        sysProp=""
+        # there will be probably more implementations tested in the very near future
+        if [ "x"$name == "xjaeger" ] ; then sysProp=" -Dtracing="$name ; fi
+        java -jar $sysProp "$PERF_SUITE_LOC" -rff "$dump" $config
     done
     popd
     popd
-    printPerftestSuiteFooter
-}
-
-function runTracingSuite {
-    loc=$1
-    name=$2
-    printPerftestSuiteHeader "$loc" "$name"
-    pushd $loc
-    git reset --hard
-    mvn clean install -DskipTests
-    pushd $PERF_SUITE_DUMP_LOC
-    tArr="01 02 04 10 50"
-    #tArr="max"
-    for tNo in $tArr ;
-    do
-        dump=${name}"-"${tNo}"threads.csv"
-        config="${BENCHMARK_COMMON_CONFIG} -t ${tNo}"
-        touch $dump
-        java -jar -Dtracing=$name "$PERF_SUITE_LOC" -rff "$dump" $config
-    done
-    popd
-    popd 
     printPerftestSuiteFooter
 }
 
@@ -131,6 +118,7 @@ function run {
     # that everything is written to a log file, no other log statements
     # are produced.
     cp BenchmarkLogger.java ${N_FILE_LOGGED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
+    filtered=""
     readarray -d '' filtered < <(find ${N_FILE_LOGGED}/narayana/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     pushd $N_FILE_LOGGED
     git reset --hard
@@ -145,7 +133,7 @@ function run {
     # the OpenTracing API (a no-op tracer is still registered)
     # TODO - this might include running several variants of tests
     # (various configurations and tracing implementations)
-    runTracingSuite "$N_NOOP_TRACED" "noop"
+    runSuite "$N_NOOP_TRACED" "noop"
 
     displayPerftestResults
 }

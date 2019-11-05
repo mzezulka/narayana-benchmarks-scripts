@@ -31,9 +31,6 @@ function prepareEnv {
     
     rm -rf $PERF_SUITE_DUMP_LOC
     mkdir -p $PERF_SUITE_DUMP_LOC
-    pushd ${HOME}"/git/narayana-performance/narayana"
-    mvn clean install -DskipTests
-    popd
 }
 
 function displayPerftestResults {
@@ -107,12 +104,12 @@ function run {
     # on the exact same places as tracing. The logger is set up so
     # that everything is written to a log file, no other log statements
     # are produced.
-    cp BenchmarkLogger.java ${N_FILE_LOGGED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     filtered=""
     pushd $N_FILE_LOGGED
     git reset --hard
     readarray -d '' filtered < <(find ${PWD}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     popd
+    cp BenchmarkLogger.java ${N_FILE_LOGGED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     java -jar transformer.jar $filtered
     runSuite "$N_FILE_LOGGED"  "file-logged"    
 

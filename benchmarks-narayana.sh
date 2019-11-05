@@ -98,7 +98,7 @@ function run {
     prepareEnv    
 
     #Narayana which is cloned from the repo and is left untouched.
-    runSuite "$N_VANILLA" "vanilla" 
+    #runSuite "$N_VANILLA" "vanilla" 
  
     # Narayana which is patched with a series of logging statements
     # on the exact same places as tracing. The logger is set up so

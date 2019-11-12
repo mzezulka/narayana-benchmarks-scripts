@@ -16,7 +16,8 @@ PERF_SUITE_DUMP_LOC="/tmp/narayana-performance-tests-dump"
 #
 # the config below is the default one which is used
 # if no config string is passed to the script
-BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
+BENCHMARK_COMMON_CONFIG=" -f 1 -wi 1 -i 1"
+# BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
 
 # Narayana sources defitions
 N_VANILLA=${HOME}"/git/narayana-vanilla"
@@ -89,7 +90,10 @@ function runSuite {
         java -jar $sysProp "$PERF_SUITE_LOC" -rff "$dump" $config
     done
     popd
+    # we're finished with what we wanted to do, let's clean up the repository for other runs
+    git reset --hard
     popd
+
     printPerftestSuiteFooter
 }
 
@@ -98,7 +102,7 @@ function run {
     prepareEnv    
 
     #Narayana which is cloned from the repo and is left untouched.
-    #runSuite "$N_VANILLA" "vanilla" 
+    runSuite "$N_VANILLA" "vanilla" 
  
     # Narayana which is patched with a series of logging statements
     # on the exact same places as tracing. The logger is set up so
@@ -106,7 +110,6 @@ function run {
     # are produced.
     filtered=""
     pushd $N_FILE_LOGGED
-    git reset --hard
     readarray -d '' filtered < <(find ${PWD}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     popd
     cp BenchmarkLogger.java ${N_FILE_LOGGED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"

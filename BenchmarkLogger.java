@@ -39,6 +39,7 @@ public final class BenchmarkLogger {
         if(NUM_WRITES.getAndIncrement() >= MAX_NUM_WRITES) {
             FH.flush();
             FH.close();
+            NUM_WRITES.set(0);
             LOGGER.removeHandler(FH);
             LOGGER.info("Emptying log file...");
             new File(FILE_PATH).delete();

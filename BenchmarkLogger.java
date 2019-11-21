@@ -23,8 +23,9 @@ public final class BenchmarkLogger {
 
     static {
         try {
+            LOGGER.setUseParentHandlers(false);
             LOGGER.setLevel(Level.ALL);
-            FH = new FileHandler(FILE_PATH);
+            FH = new FileHandler(FILE_PATH, 1_000_000, 1);
             FH.setLevel(Level.ALL);
             LOGGER.addHandler(FH);
             SimpleFormatter formatter = new SimpleFormatter();
@@ -44,7 +45,7 @@ public final class BenchmarkLogger {
             LOGGER.info("Emptying log file...");
             new File(FILE_PATH).delete();
             try {
-                FH = new FileHandler(FILE_PATH);
+                FH = new FileHandler(FILE_PATH, 1_000_000, 1);
             } catch(IOException ioe) {
                 throw new RuntimeException(ioe);
             }

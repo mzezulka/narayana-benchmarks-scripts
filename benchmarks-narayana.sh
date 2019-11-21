@@ -17,13 +17,11 @@ PERF_SUITE_DUMP_LOC="/tmp/narayana-performance-tests-dump"
 # the config below is the default one which is used
 # if no config string is passed to the script
 BENCHMARK_COMMON_CONFIG=" -f 1 -wi 1 -i 1"
-# BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
+#BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
 
 # Narayana sources defitions
 N_VANILLA=${HOME}"/git/narayana-vanilla"
-N_TRACED=${HOME}"/git/narayana"
-N_NOOP_TRACED=${HOME}"/git/narayana"
-N_FILE_LOGGED=${HOME}"/git/narayana"
+N_PATCHED=${HOME}"/git/narayana"
 
 function prepareEnv {
     # create a folder into which all the perf test results will be dumped into
@@ -32,6 +30,9 @@ function prepareEnv {
     
     rm -rf $PERF_SUITE_DUMP_LOC
     mkdir -p $PERF_SUITE_DUMP_LOC
+	
+    pushd $N_VANILLA && git reset --hard && popd
+    pushd $N_PATCHED && git reset --hard && popd
 }
 
 function displayPerftestResults {
@@ -74,7 +75,11 @@ function runSuite {
     # compile JMH perf test tool with the most fresh version of Narayana
     # present in the Maven repository
     pushd ${HOME}"/git/narayana-performance/narayana"
-    mvn clean install -DskipTests
+    # the default version of Narayana is equal to the version used in the traced version of Naryana
+    # (see narayana/ArjunaCore perftest pom for the specific version)
+    mvnProp=" "
+    if ["x"$name == "xvanilla" ] ; then mvnProp=" -Dorg.jboss.narayana.version=5.10.0.Final "; fi
+    mvn clean install -DskipTests $mvnProp
     popd
     
     pushd $PERF_SUITE_DUMP_LOC
@@ -84,9 +89,10 @@ function runSuite {
         dump=${name}"-"${tNo}"threads.csv"
         config="${BENCHMARK_COMMON_CONFIG} -t ${tNo}"
         touch $dump
-        sysProp=""
+        sysProp=" "
         # there will be probably more implementations tested in the very near future
         if [ "x"$name == "xjaeger" ] ; then sysProp=" -Dtracing="$name ; fi
+        if [ "x"$name == "xtracing-off" ] ; then sysProp=" -Dorg.jboss.narayana.tracingActivated=false "; fi
         java -jar $sysProp "$PERF_SUITE_LOC" -rff "$dump" $config
     done
     popd
@@ -103,28 +109,28 @@ function run {
 
     #Narayana which is cloned from the repo and is left untouched.
     runSuite "$N_VANILLA" "vanilla" 
- 
+: ' 
     # Narayana which is patched with a series of logging statements
     # on the exact same places as tracing. The logger is set up so
     # that everything is written to a log file, no other log statements
     # are produced.
     filtered=""
-    pushd $N_FILE_LOGGED
+    pushd $N_PATCHED
     readarray -d '' filtered < <(find ${PWD}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     popd
-    cp BenchmarkLogger.java ${N_FILE_LOGGED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
+    cp BenchmarkLogger.java ${N_PATCHED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     java -jar transformer.jar $filtered
-    runSuite "$N_FILE_LOGGED"  "file-logged"    
+    runSuite "$N_PATCHED"  "file-logged"
 
-    runSuite "$N_TRACED" "jaeger"
+    runSuite "$N_PATCHED" "tracing-off"
+
+    runSuite "$N_PATCHED" "jaeger"
 
     # Narayana patched with tracing. No tracers are registered, so this
     # suite will show us how much overhead is caused just by introducing
     # the OpenTracing API (a no-op tracer is still registered)
-    # TODO - this might include running several variants of tests
-    # (various configurations and tracing implementations)
-    runSuite "$N_NOOP_TRACED" "noop"
-
+    runSuite "$N_PATCHED" "noop"
+'
     displayPerftestResults
 }
 

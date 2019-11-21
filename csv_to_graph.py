@@ -27,6 +27,8 @@ def assignRgbTriple(filename):
         return "rgb(" + shade + ", 255, " + shade + ")"
     elif("vanilla" in filename):
         return "rgb(" + shade + ", " + shade + ", " + shade + ")"
+    elif("tracing-off" in filename):
+        return "rgb(255, 255, " + shade + ")"
     else:
         raise ValueError("got weird filename " + filename)
 

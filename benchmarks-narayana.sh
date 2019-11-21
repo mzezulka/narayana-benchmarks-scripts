@@ -20,7 +20,6 @@ BENCHMARK_COMMON_CONFIG=" -f 1 -wi 1 -i 1"
 #BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
 
 # Narayana sources defitions
-N_VANILLA=${HOME}"/git/narayana-vanilla"
 N_PATCHED=${HOME}"/git/narayana"
 
 function prepareEnv {
@@ -57,7 +56,7 @@ function printPerftestSuiteHeader {
     narayanaLoc=$1
     perftestSuiteName=$2
     printf ${YELLOW}"#####Test suite "${perftestSuiteName}" #####\n"
-    printf "Location of Narayana sources: "${narayanaLoc}"\n"
+    printf "Location of Narayana sources: '"${narayanaLoc}"'\n"
     printf $COLOR_OFF
 }
 
@@ -66,19 +65,18 @@ function printPerftestSuiteFooter {
 }
 
 function runSuite {
-    loc=$1
-    name=$2
-    # which repository branch will we use? use the third optional argument if it's present
+    name=$1
+    loc=$2
     printPerftestSuiteHeader "$loc" "$name"
-    pushd $loc
-    mvn clean install -DskipTests
-    # compile JMH perf test tool with the most fresh version of Narayana
-    # present in the Maven repository
+    # if we are not on vanilla Narayana, we must get a fresh install of it from local sources
+    if [ "x"$name != "xvanilla" ] ; then pushd $loc ; mvn clean install -DskipTests ; fi
+
+    # next, compile JMH perf test suite jar with the most fresh version of Narayana
     pushd ${HOME}"/git/narayana-performance/narayana"
     # the default version of Narayana is equal to the version used in the traced version of Naryana
     # (see narayana/ArjunaCore perftest pom for the specific version)
     mvnProp=" "
-    if ["x"$name == "xvanilla" ] ; then mvnProp=" -Dorg.jboss.narayana.version=5.10.0.Final "; fi
+    if [ "x"$name == "xvanilla" ] ; then mvnProp=" -Dorg.jboss.narayana.version=5.10.0.Final "; fi
     mvn clean install -DskipTests $mvnProp
     popd
     
@@ -107,8 +105,8 @@ function runSuite {
 function run {    
     prepareEnv    
 
-    #Narayana which is cloned from the repo and is left untouched.
-    runSuite "$N_VANILLA" "vanilla" 
+    #Narayana which is cloned from the repo and is left untouched. The second argument will be ignored.
+    runSuite "vanilla" " "
 : ' 
     # Narayana which is patched with a series of logging statements
     # on the exact same places as tracing. The logger is set up so
@@ -120,16 +118,16 @@ function run {
     popd
     cp BenchmarkLogger.java ${N_PATCHED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     java -jar transformer.jar $filtered
-    runSuite "$N_PATCHED"  "file-logged"
+    runSuite "file-logged" "$N_PATCHED"
 
-    runSuite "$N_PATCHED" "tracing-off"
+    runSuite "tracing-off" "$N_PATCHED"
 
-    runSuite "$N_PATCHED" "jaeger"
+    runSuite "jaeger" "$N_PATCHED"
 
     # Narayana patched with tracing. No tracers are registered, so this
     # suite will show us how much overhead is caused just by introducing
     # the OpenTracing API (a no-op tracer is still registered)
-    runSuite "$N_PATCHED" "noop"
+    runSuite "noop" "$N_PATCHED"
 '
     displayPerftestResults
 }

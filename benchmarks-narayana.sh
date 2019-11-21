@@ -30,7 +30,6 @@ function prepareEnv {
     rm -rf $PERF_SUITE_DUMP_LOC
     mkdir -p $PERF_SUITE_DUMP_LOC
 	
-    pushd $N_VANILLA && git reset --hard && popd
     pushd $N_PATCHED && git reset --hard && popd
 }
 

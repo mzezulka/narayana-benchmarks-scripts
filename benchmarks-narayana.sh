@@ -16,8 +16,8 @@ PERF_SUITE_DUMP_LOC="/tmp/narayana-performance-tests-dump"
 #
 # the config below is the default one which is used
 # if no config string is passed to the script
-BENCHMARK_COMMON_CONFIG=" -f 1 -wi 1 -i 1"
-#BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
+#BENCHMARK_COMMON_CONFIG=" -f 1 -wi 1 -i 1"
+BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 3 -i 5 "
 
 # Narayana sources defitions
 N_PATCHED=${HOME}"/git/narayana"
@@ -78,7 +78,9 @@ function runSuite {
     if [ "x"$name == "xvanilla" ] ; then mvnProp=" -Dorg.jboss.narayana.version=5.10.0.Final "; fi
     mvn clean install -DskipTests $mvnProp
     popd
-    
+    # we're finished with our build, let's clean up the repository for other runs
+    if [ "x"$name != "xvanilla" ] ; then git reset --hard ; popd ; fi   
+
     pushd $PERF_SUITE_DUMP_LOC
     tArr="01 02 04 10 50"
     for tNo in $tArr ;
@@ -93,10 +95,6 @@ function runSuite {
         java -jar $sysProp "$PERF_SUITE_LOC" -rff "$dump" $config
     done
     popd
-    # we're finished with what we wanted to do, let's clean up the repository for other runs
-    git reset --hard
-    popd
-
     printPerftestSuiteFooter
 }
 
@@ -106,7 +104,7 @@ function run {
 
     #Narayana which is cloned from the repo and is left untouched. The second argument will be ignored.
     runSuite "vanilla" " "
-: ' 
+ 
     # Narayana which is patched with a series of logging statements
     # on the exact same places as tracing. The logger is set up so
     # that everything is written to a log file, no other log statements
@@ -127,7 +125,7 @@ function run {
     # suite will show us how much overhead is caused just by introducing
     # the OpenTracing API (a no-op tracer is still registered)
     runSuite "noop" "$N_PATCHED"
-'
+
     displayPerftestResults
 }
 

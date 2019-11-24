@@ -38,16 +38,22 @@ function printPerftestSuiteFooter {
 function buildNarayana {
     name=$1
     loc=$2
+    mvnVer="5.9.6.benchmark."${name}
     printPerftestSuiteHeader "$loc" "$name"
     # if we are not on vanilla Narayana, we must get a fresh install of it from local sources
-    if [ "x"$name != "xvanilla" ] ; then pushd $loc ; mvn clean install -DskipTests ; fi
+    if [ "x"$name != "xvanilla" ]
+    then
+      pushd $loc
+      mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$mvnVer
+      mvn clean install -DskipTests
+    fi
 
     # next, compile JMH perf test suite jar with the most fresh version of Narayana
     pushd ${HOME}"/git/narayana-performance/narayana"
     # the default version of Narayana is equal to the version used in the traced version of Naryana
     # (see narayana/ArjunaCore perftest pom for the specific version)
-    mvnProp=" "
-    if [ "x"$name == "xvanilla" ] ; then mvnProp=" -Dorg.jboss.narayana.version=5.10.0.Final "; fi
+    mvnProp=" -Dnarayana.version=$mvnVer "
+    if [ "x"$name == "xvanilla" ] ; then mvnProp=${mvnProp}" -Dorg.jboss.narayana.version=5.10.0.Final "; fi
     mvn clean install -DskipTests $mvnProp
     popd
     # we're finished with our build, let's clean up the repository for other runs
@@ -82,6 +88,8 @@ function build {
     # suite will show us how much overhead is caused just by introducing
     # the OpenTracing API (a no-op tracer is still registered)
     buildNarayana "noop" "$N_PATCHED"
+
+    tree ~/.m2/repository/org/jboss/narayana/narayana-full/
 }
 
 build

@@ -10,10 +10,12 @@ set -eux
 N_PATCHED=${HOME}"/git/narayana"
 
 function prepareEnv {
-    # create a folder into which all the perf test results will be dumped into
     printf ${YELLOW}"##### Preparing the environment #####\n"
     printf $COLOR_OFF
     pushd $N_PATCHED && git reset --hard && popd
+    # the folder in which all compiled perf test suites will go to
+    [ -d "suites" ] && mkdir -p suites_old && mv suites/* suites_old/
+    mkdir -p suites    
 }
 
 # color definitions
@@ -70,6 +72,7 @@ function buildNarayana {
     popd
     # we're finished with our build, let's clean up the repository for other runs
     if [ "x"$name != "xvanilla" ] ; then git reset --hard ; popd ; fi   
+    cp ${HOME}"/git/narayana-performance/narayana/ArjunaCore/arjuna/target/benchmarks.jar" suites/${name}".jar"
     printPerftestSuiteFooter
 }
 

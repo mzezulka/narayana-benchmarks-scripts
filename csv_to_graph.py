@@ -12,10 +12,12 @@ if(len(sys.argv) < 2):
 filename = sys.argv[1]
 shades = { "01" : 225, "02" : 180, "04" : 135, "10" : 90, "50" : 45 }
 
+def retrieveNoThreadsFromFilename(filename):
+    return re.match('.*(\d{2})threads\.csv', filename).group(1)
+
 def shadeFromFilename(filename):
     print(filename)
-    m = re.match('.*(\d{2})threads\.csv', filename)
-    return shades[m.group(1)]
+    return shades[retrieveNoThreadsFromFilename(filename)]
 
 def assignRgbTriple(filename):
     shade = str(shadeFromFilename(filename))
@@ -34,13 +36,19 @@ def assignRgbTriple(filename):
 
 df = pd.read_csv(filename)
 fig = go.Figure()
-
+scores=[]
+threads=[]
+names=[]
+colors=[]
 for f in sys.argv[1:]:
-    df = pd.read_csv(f)
+    csv = pd.read_csv(f)
+    scores += list(csv['Score'])
     # Benchmark contains fully qualified test class names, let's trim them out a bit
-    df['Benchmark'] = [ '/'.join(b.split('.')[-2:]) for b in df['Benchmark'] ]
-    fig.add_trace(go.Bar(x = df['Benchmark'], y = df['Score'], name=f, marker_color=assignRgbTriple(f)))
+    names_aux = [ '/'.join(b.split('.')[-2:]) for b in csv['Benchmark'] ]
+    threads += [int(retrieveNoThreadsFromFilename(f))] * len(names_aux)
+    names += names_aux
+    colors += [assignRgbTriple(f)] * len(names_aux)
 
-fig.show()
+go.Figure(data=[go.Scatter3d(x=names, y=threads, z=scores, mode='markers', marker=dict(size=6, color=colors, colorscale="Viridis", opacity=0.8))]).show()
 
 

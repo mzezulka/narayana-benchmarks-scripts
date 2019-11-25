@@ -2,6 +2,8 @@
 # This script is intended to be used as a main program
 # for measuring overhead implied by integration of OpenTracing
 # into the Narayana transaction manager.
+
+# requirements : xmlstarlet
 set -eux
 
 # Narayana sources defitions
@@ -38,23 +40,33 @@ function printPerftestSuiteFooter {
 function buildNarayana {
     name=$1
     loc=$2
-    mvnVer="5.9.6.benchmark."${name}
+    # this is the default version we will use for vanilla Narayana perf suite
     printPerftestSuiteHeader "$loc" "$name"
     # if we are not on vanilla Narayana, we must get a fresh install of it from local sources
     if [ "x"$name != "xvanilla" ]
     then
       pushd $loc
-      mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$mvnVer
+      mvnVer="5.9.6.benchmark."${name}
+      mvn versions:set -DgenerateBackupPoms=false -DprocessAllModules=true -DnewVersion=$mvnVer
       mvn clean install -DskipTests
     fi
 
     # next, compile JMH perf test suite jar with the most fresh version of Narayana
     pushd ${HOME}"/git/narayana-performance/narayana"
-    # the default version of Narayana is equal to the version used in the traced version of Naryana
-    # (see narayana/ArjunaCore perftest pom for the specific version)
-    mvnProp=" -Dnarayana.version=$mvnVer "
-    if [ "x"$name == "xvanilla" ] ; then mvnProp=${mvnProp}" -Dorg.jboss.narayana.version=5.10.0.Final "; fi
-    mvn clean install -DskipTests $mvnProp
+    git reset --hard
+    if [ "x"$name == "xvanilla" ]
+    then
+      mvn clean install -DskipTests
+    else
+      mvnProp=" -Dnarayana.version=$mvnVer "
+      pushd tools
+      # for some odd reason, test utils do not declare narayana-perf as their parent but
+      # narayana-all
+      xmlstarlet ed --inplace -N x="http://maven.apache.org/POM/4.0.0" --update '/x:project/x:parent/x:version' --value $mvnVer pom.xml
+      popd
+      mvn -e versions:set -DgenerateBackupPoms=false -DnewVersion=$mvnVer
+      mvn clean install -DskipTests $mvnProp
+    fi
     popd
     # we're finished with our build, let's clean up the repository for other runs
     if [ "x"$name != "xvanilla" ] ; then git reset --hard ; popd ; fi   
@@ -89,7 +101,7 @@ function build {
     # the OpenTracing API (a no-op tracer is still registered)
     buildNarayana "noop" "$N_PATCHED"
 
-    tree ~/.m2/repository/org/jboss/narayana/narayana-full/
+    tree ~/.m2/repository/org/jboss/narayana/narayana-perf
 }
 
 build

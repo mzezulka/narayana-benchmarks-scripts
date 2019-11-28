@@ -18,7 +18,8 @@
 #               and a real tracer registered
 #
 # script dependencies : xmlstarlet (ugly, but still better than depending on sed magic :-) )
-set -eux
+
+# set -eux
 
 # Narayana sources defitions
 N_PATCHED=${HOME}"/git/narayana"
@@ -27,8 +28,9 @@ function prepareEnv {
     printf ${YELLOW}"##### Preparing the environment #####\n"
     printf $COLOR_OFF
     pushd $N_PATCHED && git reset --hard && popd
+    echo $PWD
     # the folder in which all compiled perf test suites will go to
-    [ -d "suites" ] && mkdir -p suites_old && mv suites/* suites_old/
+    [ -d "suites" ] && [ `ls -1 suites | wc -l` -ge 1 ] && mkdir -p suites_old && mv suites/* suites_old/
     mkdir -p suites    
 }
 
@@ -42,10 +44,8 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 
 function printPerftestSuiteHeader {
-    narayanaLoc=$1
-    perftestSuiteName=$2
+    perftestSuiteName=$1
     printf ${YELLOW}"#####Test suite "${perftestSuiteName}" #####\n"
-    printf "Location of Narayana sources: '"${narayanaLoc}"'\n"
     printf $COLOR_OFF
 }
 
@@ -55,10 +55,11 @@ function printPerftestSuiteFooter {
 
 function buildNarayana {
     name=$1
-    printPerftestSuiteHeader "$loc" "$name"
+    printPerftestSuiteHeader "$name"
     # if we are not on vanilla Narayana, we must get a fresh install of it from local sources
     if [ "x"$name != "xvanilla" ]
     then
+      pushd $N_PATCHED
       mvnVer="5.9.6.benchmark."${name}
       mvn versions:set -DgenerateBackupPoms=false -DprocessAllModules=true -DnewVersion=$mvnVer
       mvn clean install -DskipTests
@@ -82,7 +83,7 @@ function buildNarayana {
     fi
     popd
     # we're finished with our build, let's clean up the repository for other runs
-    if [ "x"$name != "xvanilla" ] ; then git reset --hard ; fi   
+    if [ "x"$name != "xvanilla" ] ; then git reset --hard ; popd; fi   
     cp ${HOME}"/git/narayana-performance/narayana/ArjunaCore/arjuna/target/benchmarks.jar" suites/${name}".jar"
     printPerftestSuiteFooter
 }
@@ -94,14 +95,12 @@ function build {
     buildNarayana "vanilla"
 
     filtered=""
-    pushd $N_PATCHED
-    readarray -d '' filtered < <(find ${PWD}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
+    readarray -d '' filtered < <(find ${N_PATCHED}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     cp BenchmarkLogger.java ${N_PATCHED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     java -jar transformer.jar $filtered
     # note: the first suite built must be file-logged because we would otherwise lose all the transformations done above
     for regularPerfTest in file-logged tracing-off jaeger noop ; do buildNarayana "$regularPerfTest" ; done
-    popd
-    tree ~/.m2/repository/org/jboss/narayana/narayana-perf
+    tree -D ~/.m2/repository/org/jboss/narayana/narayana-perf
 }
 
 build

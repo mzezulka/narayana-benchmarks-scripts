@@ -58,10 +58,18 @@ function printPerftestSuiteFooter {
 
 function runSuite {
     name=$1
-    printPerftestSuiteHeader "$name"
+    # cut off "suites/" prefix from the name
+    nameWithExtension="${name##suites/}"
+    # get rid of .jar filename extension
+    name="${nameWithExtension%.*}"
+    # make a second copy which won't be touched
+    # we still need to know the actual path to the jar
+    # to run the benchmark
+    fullName=$1
 
+    printPerftestSuiteHeader "$name"
     pushd $PERF_SUITE_DUMP_LOC
-    tArr="01 02 04 10 50"
+    tArr="01 02 04 08 16 32 64"
     for tNo in $tArr ;
     do
         dump=${name}"-"${tNo}"threads.csv"
@@ -71,35 +79,20 @@ function runSuite {
         # there will be probably more implementations tested in the very near future
         if [ "x"$name == "xjaeger" ] ; then sysProp=" -Dtracing="$name ; fi
         if [ "x"$name == "xtracing-off" ] ; then sysProp=" -Dorg.jboss.narayana.tracingActivated=false "; fi
-        java -jar $sysProp "$PERF_SUITE_LOC" -rff "$dump" $config
+        java -jar $sysProp "$fullName" -rff "$dump" $config
     done
     popd
     printPerftestSuiteFooter
 }
 
-# Run the whole shenanigan.
 function run {    
     prepareEnv    
 
-    #Narayana which is cloned from the repo and is left untouched.
-    runSuite "vanilla"
- 
-    # Narayana which is patched with a series of logging statements
-    # on the exact same places as tracing. The logger is set up so
-    # that everything is written to a log file, no other log statements
-    # are produced.
-    runSuite "file-logged"
-
-    runSuite "tracing-off"
-
-    runSuite "jaeger"
-
-    # Narayana patched with tracing. No tracers are registered, so this
-    # suite will show us how much overhead is caused just by introducing
-    # the OpenTracing API (a no-op tracer is still registered)
-    runSuite "noop"
-
-    displayPerftestResults
+    for suite in suites/*.jar
+    do
+      runSuite $suite
+    done
+        displayPerftestResults
 }
 
 run

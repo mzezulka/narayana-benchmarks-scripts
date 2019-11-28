@@ -2,8 +2,22 @@
 # This script is intended to be used as a main program
 # for measuring overhead implied by integration of OpenTracing
 # into the Narayana transaction manager.
-
-# requirements : xmlstarlet
+#
+# quick comment for each of the Narayana versions being built (and consequently tested):
+#
+# vanilla     - upstream version (see pom.xml for the default version) left untouched
+# file-logged - patched with a series of logging statements
+#               at exactly same places where tracing statements are,
+#               the only appender is a file appender
+# noop        - Narayana patched with tracing but with only a default, so-called
+#               no-op tracer registered; the purpose of this suite is to show
+#               how much overhead is caused just by introducing the OpenTracing API
+# tracing-off - we completely turn off tracing via if statements and a system property
+#               pseudocode: if(!TRACING_ACTIVE) return; ...
+# jaeger      - the real essence of this whole perf testing, Narayana with tracing
+#               and a real tracer registered
+#
+# script dependencies : xmlstarlet (ugly, but still better than depending on sed magic :-) )
 set -eux
 
 # Narayana sources defitions
@@ -41,13 +55,10 @@ function printPerftestSuiteFooter {
 
 function buildNarayana {
     name=$1
-    loc=$2
-    # this is the default version we will use for vanilla Narayana perf suite
     printPerftestSuiteHeader "$loc" "$name"
     # if we are not on vanilla Narayana, we must get a fresh install of it from local sources
     if [ "x"$name != "xvanilla" ]
     then
-      pushd $loc
       mvnVer="5.9.6.benchmark."${name}
       mvn versions:set -DgenerateBackupPoms=false -DprocessAllModules=true -DnewVersion=$mvnVer
       mvn clean install -DskipTests
@@ -62,8 +73,8 @@ function buildNarayana {
     else
       mvnProp=" -Dnarayana.version=$mvnVer "
       pushd tools
-      # for some odd reason, test utils do not declare narayana-perf as their parent but
-      # narayana-all
+      # test utils do not declare narayana-perf as their parent but
+      # narayana-all, we need to manually edit the pom.xml
       xmlstarlet ed --inplace -N x="http://maven.apache.org/POM/4.0.0" --update '/x:project/x:parent/x:version' --value $mvnVer pom.xml
       popd
       mvn -e versions:set -DgenerateBackupPoms=false -DnewVersion=$mvnVer
@@ -71,7 +82,7 @@ function buildNarayana {
     fi
     popd
     # we're finished with our build, let's clean up the repository for other runs
-    if [ "x"$name != "xvanilla" ] ; then git reset --hard ; popd ; fi   
+    if [ "x"$name != "xvanilla" ] ; then git reset --hard ; fi   
     cp ${HOME}"/git/narayana-performance/narayana/ArjunaCore/arjuna/target/benchmarks.jar" suites/${name}".jar"
     printPerftestSuiteFooter
 }
@@ -80,30 +91,16 @@ function buildNarayana {
 function build {    
     prepareEnv    
 
-    #Narayana which is cloned from the repo and is left untouched. The second argument will be ignored.
-    buildNarayana "vanilla" " "
- 
-    # Narayana which is patched with a series of logging statements
-    # on the exact same places as tracing. The logger is set up so
-    # that everything is written to a log file, no other log statements
-    # are produced.
+    buildNarayana "vanilla"
+
     filtered=""
     pushd $N_PATCHED
     readarray -d '' filtered < <(find ${PWD}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
-    popd
     cp BenchmarkLogger.java ${N_PATCHED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     java -jar transformer.jar $filtered
-    buildNarayana "file-logged" "$N_PATCHED"
-
-    buildNarayana "tracing-off" "$N_PATCHED"
-
-    buildNarayana "jaeger" "$N_PATCHED"
-
-    # Narayana patched with tracing. No tracers are registered, so this
-    # suite will show us how much overhead is caused just by introducing
-    # the OpenTracing API (a no-op tracer is still registered)
-    buildNarayana "noop" "$N_PATCHED"
-
+    # note: the first suite built must be file-logged because we would otherwise lose all the transformations done above
+    for regularPerfTest in file-logged tracing-off jaeger noop ; do buildNarayana "$regularPerfTest" ; done
+    popd
     tree ~/.m2/repository/org/jboss/narayana/narayana-perf
 }
 

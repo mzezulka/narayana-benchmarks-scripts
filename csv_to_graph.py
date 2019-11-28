@@ -10,7 +10,8 @@ if(len(sys.argv) < 2):
     raise ValueError("expected exactly one argument representing the input csv file")
 
 filename = sys.argv[1]
-shades = { "01" : 225, "02" : 180, "04" : 135, "10" : 90, "50" : 45 }
+# 10 and 50 are for backwards compatibility with the previous tests
+shades = { "01" : 225, "02" : 195, "04" : 165, "08" : 135, "10", 135, "16" : 105, "32" : 75, "50" : 75, "64" : 45, "128" : 15 }
 
 def retrieveNoThreadsFromFilename(filename):
     return re.match('.*(\d{2})threads\.csv', filename).group(1)

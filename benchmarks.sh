@@ -2,6 +2,7 @@
 # This script is intended to be used as a main program
 # for measuring overhead implied by integration of OpenTracing
 # into the Narayana transaction manager.
+# It must be run from the directory in which this file resides.
 set -eux
 
 PERF_SUITE_LOC=${HOME}"/git/narayana-performance/narayana/ArjunaCore/arjuna/target/benchmarks.jar"
@@ -65,7 +66,7 @@ function runSuite {
     # make a second copy which won't be touched
     # we still need to know the actual path to the jar
     # to run the benchmark
-    fullName=$1
+    fullName=${PWD}/$1
 
     printPerftestSuiteHeader "$name"
     pushd $PERF_SUITE_DUMP_LOC

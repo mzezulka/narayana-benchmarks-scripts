@@ -52,6 +52,6 @@ for f in sorted(sys.argv[1:]):
     scores += list(csv['Score'])
 
 fig.add_trace(go.Scatter(name=narayanaType, x=threads, y=scores, marker_color=assignRgbTriple(narayanaType)))
-fig.update_layout(title=names[0], xaxis_title="no. threads, log x", yaxis_title="score")
+fig.update_layout(title=names[0], xaxis_title="no. threads, binary log", yaxis_title="score")
 fig.show()
 

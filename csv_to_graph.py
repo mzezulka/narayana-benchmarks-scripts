@@ -27,26 +27,35 @@ def typeFromFilename(filename):
 if(len(sys.argv) < 2):
     raise ValueError("expected exactly one argument representing at least one input csv file")
 
-fig = make_subplots(rows=1, cols=5)
 namesMap={}
 narayanaType=None
 lastSeenNarayana=typeFromFilename(sys.argv[1])
 highestColIndex=1
+dataTriples={}
+dataTriples[lastSeenNarayana]=[]
 
 for f in sorted(sys.argv[1:]):
     narayanaType = typeFromFilename(f)
     if(narayanaType != lastSeenNarayana):
         lastSeenNarayana=narayanaType
+        dataTriples[lastSeenNarayana] = []
     for line in pd.read_csv(f).groupby(["Benchmark", "Threads", "Score"]):
         (name, threads, score) = line[0]
-        logThreads = math.log(int(threads), 2)
+        threads = math.log(int(threads), 2)
         # Benchmark contains fully qualified test class names, let's trim the name a bit
         name = '/'.join(name.split('.')[-2:])
+        dataTriples[lastSeenNarayana].append((name, threads, score))
         if name not in namesMap.keys(): 
             namesMap[name] = highestColIndex
             highestColIndex += 1
-        fig.add_trace(go.Scatter(x=[logThreads], y=[score], name=narayanaType, marker_color=assignRgbTriple(lastSeenNarayana)), row=1, col=namesMap[name])
-        fig.update_layout(xaxis_title="no. threads, binary log", yaxis_title="score")
+
+fig = make_subplots(rows=1, cols=len(namesMap.keys()), subplot_titles=list(namesMap.keys()))
+for narayanaType in dataTriples.keys():
+    oneType = dataTriples[narayanaType]
+    (name, threads, score) = oneType[0]
+    fig.add_trace(go.Scatter(x=[threads], y=[score], name=narayanaType, legendgroup=narayanaType, marker_color=assignRgbTriple(narayanaType)), row=1, col=namesMap[name])
+    for (name, threads, score) in oneType[1:]:
+       fig.add_trace(go.Scatter(showlegend=False, x=[threads], y=[score], name=narayanaType, legendgroup=narayanaType, marker_color=assignRgbTriple(narayanaType)), row=1, col=namesMap[name])
 
 fig.show()
 

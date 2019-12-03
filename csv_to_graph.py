@@ -6,9 +6,7 @@ import plotly.graph_objects as go
 import sys
 import re
 import math
-
-def retrieveNoThreadsFromFilename(filename):
-    return re.match('.*(\d{2})threads\.csv', filename).group(1)
+from plotly.subplots import make_subplots
 
 types = [ "file-logged", "noop", "jaeger", "vanilla", "tracing-off" ]
 rgbTriples = { "file-logged" : "255, 25, 25", "noop" : "25, 25, 255", "jaeger" : "25, 255, 25", "vanilla" : "25, 25, 25", "tracing-off" : "240, 240, 25"  }
@@ -29,29 +27,26 @@ def typeFromFilename(filename):
 if(len(sys.argv) < 2):
     raise ValueError("expected exactly one argument representing at least one input csv file")
 
-fig = go.Figure()
-scores=[]
-threads=[]
-names=[]
+fig = make_subplots(rows=1, cols=5)
+namesMap={}
 narayanaType=None
 lastSeenNarayana=typeFromFilename(sys.argv[1])
+highestColIndex=1
 
 for f in sorted(sys.argv[1:]):
-    csv = pd.read_csv(f)
     narayanaType = typeFromFilename(f)
     if(narayanaType != lastSeenNarayana):
-        print("names=" + str(names) + ", threads=" + str(threads) + ", scores=" + str(scores))  
-        fig.add_trace(go.Scatter(name=lastSeenNarayana, x=threads, y=scores, marker_color=assignRgbTriple(lastSeenNarayana)))
-        scores=[]
-        threads=[]
-        names=[]
         lastSeenNarayana=narayanaType
-    # Benchmark contains fully qualified test class names, let's trim them out a bit
-    names += [ '/'.join(b.split('.')[-2:]) for b in csv['Benchmark'] ]
-    threads += [math.log(int(retrieveNoThreadsFromFilename(f)), 2)]
-    scores += list(csv['Score'])
+    for line in pd.read_csv(f).groupby(["Benchmark", "Threads", "Score"]):
+        (name, threads, score) = line[0]
+        logThreads = math.log(int(threads), 2)
+        # Benchmark contains fully qualified test class names, let's trim the name a bit
+        name = '/'.join(name.split('.')[-2:])
+        if name not in namesMap.keys(): 
+            namesMap[name] = highestColIndex
+            highestColIndex += 1
+        fig.add_trace(go.Scatter(x=[logThreads], y=[score], name=narayanaType, marker_color=assignRgbTriple(lastSeenNarayana)), row=1, col=namesMap[name])
+        fig.update_layout(xaxis_title="no. threads, binary log", yaxis_title="score")
 
-fig.add_trace(go.Scatter(name=narayanaType, x=threads, y=scores, marker_color=assignRgbTriple(narayanaType)))
-fig.update_layout(title=names[0], xaxis_title="no. threads, binary log", yaxis_title="score")
 fig.show()
 

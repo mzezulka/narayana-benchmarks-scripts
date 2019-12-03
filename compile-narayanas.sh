@@ -103,4 +103,20 @@ function build {
     tree -D ~/.m2/repository/org/jboss/narayana/narayana-perf
 }
 
-build
+# Check that all built jars have the proper Narayana version in them
+function versionSanityCheck {
+    for jf in `ls suites/*.jar`
+    do
+        jfNoExt=${jf%.jar}
+        jfNoExt=${jfNoExt#"suites/"}
+        rm -rf $jfNoExt
+        unzip -q -d $jfNoExt $jf
+        pushd $jfNoExt
+        find META-INF/maven/org.jboss.narayana* -name "*pom.properties" -exec sh -c "grep -e version {} | grep -ve $jfNoExt" \;
+        popd
+        rm -rf $jfNoExt
+    done
+}
+
+#build
+versionSanityCheck

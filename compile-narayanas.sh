@@ -72,7 +72,7 @@ function buildNarayana {
     then
       mvn clean install -DskipTests
     else
-      mvnProp=" -Dnarayana.version=$mvnVer "
+      mvnProp=" -Dorg.jboss.narayana.version=$mvnVer "
       pushd tools
       # test utils do not declare narayana-perf as their parent but
       # narayana-all, we need to manually edit the pom.xml

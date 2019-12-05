@@ -81,6 +81,7 @@ function buildNarayana {
       mvn -e versions:set -DgenerateBackupPoms=false -DnewVersion=$mvnVer
       mvn clean install -DskipTests $mvnProp
     fi
+    git reset --hard
     popd
     # we're finished with our build, let's clean up the repository for other runs
     if [ "x"$name != "xvanilla" ] ; then git reset --hard ; popd; fi   

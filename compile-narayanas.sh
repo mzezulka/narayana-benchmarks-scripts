@@ -112,11 +112,11 @@ function versionSanityCheck {
         rm -rf $jfNoExt
         unzip -q -d $jfNoExt $jf
         pushd $jfNoExt
-        find META-INF/maven/org.jboss.narayana* -name "*pom.properties" -exec sh -c "grep -e version {} | grep -ve $jfNoExt" \;
+        find META-INF/maven/org.jboss.narayana* -name "*pom.properties" -exec sh -c "grep -e version {} | grep -ve $jfNoExt && echo {}" \;
         popd
         rm -rf $jfNoExt
     done
 }
 
-#build
+build
 versionSanityCheck

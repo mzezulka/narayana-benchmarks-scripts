@@ -64,7 +64,6 @@ function buildNarayana {
       mvn versions:set -DgenerateBackupPoms=false -DprocessAllModules=true -DnewVersion=$mvnVer
       mvn clean install -DskipTests
     fi
-
     # next, compile JMH perf test suite jar with the most fresh version of Narayana
     pushd ${HOME}"/git/narayana-performance/narayana"
     git reset --hard
@@ -92,9 +91,7 @@ function buildNarayana {
 # Run the whole shenanigan.
 function build {    
     prepareEnv    
-
     buildNarayana "vanilla"
-
     filtered=""
     readarray -d '' filtered < <(find ${N_PATCHED}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     cp BenchmarkLogger.java ${N_PATCHED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
@@ -105,6 +102,7 @@ function build {
 }
 
 # Check that all built jars have the proper Narayana version in them
+# if this command outputs nothing to stdout, the check went successfully
 function versionSanityCheck {
     for jf in `ls suites/*.jar`
     do
@@ -112,9 +110,12 @@ function versionSanityCheck {
         jfNoExt=${jfNoExt#"suites/"}
         rm -rf $jfNoExt
         unzip -q -d $jfNoExt $jf
-        pushd $jfNoExt
-        find META-INF/maven/org.jboss.narayana* -name "*pom.properties" -exec sh -c "grep -e version {} | grep -ve $jfNoExt && echo {}" \;
-        popd
+        pushd $jfNoExt > /dev/null
+        narayanaVersion=$jfNoExt
+        # vanilla is not how the version is named but we're always using something ending with Final, let's use that for our check
+        if [ "x$jfNoExt" == "xvanilla" ] ; then narayanaVersion="Final" ; fi
+        find META-INF/maven/org.jboss.narayana* -name "*pom.properties" -exec sh -c "grep -e version {} | grep -ve $narayanaVersion && echo 'Discrepancy found for version $narayanaVersion !'" \;
+        popd > /dev/null
         rm -rf $jfNoExt
     done
 }

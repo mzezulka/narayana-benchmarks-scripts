@@ -18,7 +18,7 @@ def assignRgbTriple(t):
         raise ValueError("got weird Narayana type " + t)
 
 def typeFromFilename(filename):
-    typeCand = re.match('.*\/(.*)\-\d{2}threads\.csv', filename).group(1)
+    typeCand = re.match('.*\/(.*)\-\d{1,2}threads\.csv', filename).group(1)
     if typeCand in types:
         return typeCand
     else:
@@ -50,12 +50,16 @@ for f in sorted(sys.argv[1:]):
             highestColIndex += 1
 
 fig = make_subplots(rows=1, cols=len(namesMap.keys()), subplot_titles=list(namesMap.keys()))
+dotSize = 16
 for narayanaType in dataTriples.keys():
     oneType = dataTriples[narayanaType]
+    if(oneType is None or len(oneType) == 0):
+        print("Empty result set for '" + narayanaType + "', skipping...")
+        continue
     (name, threads, score) = oneType[0]
-    fig.add_trace(go.Scatter(x=[threads], y=[score], name=narayanaType, legendgroup=narayanaType, marker_color=assignRgbTriple(narayanaType)), row=1, col=namesMap[name])
+    fig.add_trace(go.Scatter(x=[threads], y=[score], name=narayanaType, legendgroup=narayanaType, marker_size=dotSize, marker_color=assignRgbTriple(narayanaType)), row=1, col=namesMap[name])
     for (name, threads, score) in oneType[1:]:
-       fig.add_trace(go.Scatter(showlegend=False, x=[threads], y=[score], name=narayanaType, legendgroup=narayanaType, marker_color=assignRgbTriple(narayanaType)), row=1, col=namesMap[name])
+       fig.add_trace(go.Scatter(showlegend=False, x=[threads], y=[score], name=narayanaType, legendgroup=narayanaType, marker_size=dotSize, marker_color=assignRgbTriple(narayanaType)), row=1, col=namesMap[name])
 
 fig.show()
 

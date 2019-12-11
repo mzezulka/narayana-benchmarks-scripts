@@ -19,7 +19,7 @@
 #
 # script dependencies : xmlstarlet (ugly, but still better than depending on sed magic :-) )
 
-# set -eux
+set -e#ux
 
 # Narayana sources defitions
 N_PATCHED=${HOME}"/git/narayana"

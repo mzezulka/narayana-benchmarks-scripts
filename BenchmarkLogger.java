@@ -1,11 +1,6 @@
 package com.arjuna.ats.arjuna.logging;
 
-import java.io.IOException;
-import java.io.File;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.UUID;
-
 import org.apache.log4j.Logger;
 
 public final class BenchmarkLogger {

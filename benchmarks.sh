@@ -76,7 +76,7 @@ function runSuite {
         dump=${name}"-"${tNo}"threads.csv"
         config="${BENCHMARK_COMMON_CONFIG} -t ${tNo}"
         touch $dump
-        sysProp=" -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector log4j.configurationFile=/home/mzezulka/git/narayana-performance/narayana/ArjunaCore/arjuna/tests/resources/log4j.xml java.util.logging.FileHandler.append=true "
+        sysProp=" -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.configurationFile=/home/mzezulka/git/narayana/ArjunaCore/arjuna/etc/log4j.xml -Djava.util.logging.FileHandler.append=true "
         # there will be probably more implementations tested in the very near future
         if [ "x"$name == "xjaeger" ] ; then sysProp=" -Dtracing="$name ; fi
         if [ "x"$name == "xtracing-off" ] ; then sysProp=" -Dorg.jboss.narayana.tracingActivated=false "; fi

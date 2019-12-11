@@ -18,7 +18,7 @@ PERF_SUITE_DUMP_LOC="/tmp/narayana-performance-tests-dump"
 # the config below is the default one which is used
 # if no config string is passed to the script
 #BENCHMARK_COMMON_CONFIG=" -f 1 -wi 1 -i 1"
-BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 10 -i 5 "
+BENCHMARK_COMMON_CONFIG=" -r 20 -f 1 -wi 20 -i 5 "
 
 function prepareEnv {
     # create a folder into which all the perf test results will be dumped into
@@ -71,12 +71,12 @@ function runSuite {
     printPerftestSuiteHeader "$name"
     pushd $PERF_SUITE_DUMP_LOC
     tArr="01 02 04 08 16 32 64"
-    for tNo in 4 ;
+    for tNo in 01 ;
     do
         dump=${name}"-"${tNo}"threads.csv"
         config="${BENCHMARK_COMMON_CONFIG} -t ${tNo}"
         touch $dump
-        sysProp=" "
+        sysProp=" -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector log4j.configurationFile=/home/mzezulka/git/narayana-performance/narayana/ArjunaCore/arjuna/tests/resources/log4j.xml java.util.logging.FileHandler.append=true "
         # there will be probably more implementations tested in the very near future
         if [ "x"$name == "xjaeger" ] ; then sysProp=" -Dtracing="$name ; fi
         if [ "x"$name == "xtracing-off" ] ; then sysProp=" -Dorg.jboss.narayana.tracingActivated=false "; fi

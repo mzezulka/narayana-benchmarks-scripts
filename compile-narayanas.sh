@@ -121,4 +121,5 @@ function versionSanityCheck {
 }
 
 build
-versionSanityCheck
+echo "Performing sanity check of versions in the resulting JARs..."
+versionSanityCheck && echo "... complete!"

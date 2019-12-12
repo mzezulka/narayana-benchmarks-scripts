@@ -1,7 +1,7 @@
 package com.arjuna.ats.arjuna.logging;
 
 import java.util.UUID;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 public final class BenchmarkLogger {
     private static final Logger LOGGER = Logger.getLogger(BenchmarkLogger.class.getName());

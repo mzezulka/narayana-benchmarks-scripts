@@ -19,7 +19,7 @@
 #
 # script dependencies : xmlstarlet (ugly, but still better than depending on sed magic :-) )
 
-set -e#ux
+set -eux
 
 # Narayana sources defitions
 N_PATCHED=${HOME}"/git/narayana"
@@ -77,13 +77,13 @@ function buildNarayana {
       # narayana-all, we need to manually edit the pom.xml
       xmlstarlet ed --inplace -N x="http://maven.apache.org/POM/4.0.0" --update '/x:project/x:parent/x:version' --value $mvnVer pom.xml
       popd
-      mvn -e versions:set -DgenerateBackupPoms=false -DnewVersion=$mvnVer
+      mvn -e versions:set -DgenerateBackupPoms=false -DprocessAllModules=true -DnewVersion=$mvnVer
       mvn clean install -DskipTests $mvnProp
     fi
     git reset --hard
     popd
     # we're finished with our build, let's clean up the repository for other runs
-    if [ "x"$name != "xvanilla" ] ; then git reset --hard ; popd; fi   
+    if [ "x"$name != "xvanilla" ] ; then git reset --hard ; popd; fi
     cp ${HOME}"/git/narayana-performance/narayana/ArjunaCore/arjuna/target/benchmarks.jar" suites/${name}".jar"
     printPerftestSuiteFooter
 }
@@ -93,7 +93,8 @@ function build {
     prepareEnv    
     buildNarayana "vanilla"
     filtered=""
-    readarray -d '' filtered < <(find ${N_PATCHED}/Arjuna* -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
+    # do not modify tests
+    readarray -d '' filtered < <(find ${N_PATCHED}/Arjuna*/*/classes -type f -name "*.java" -exec sh -c "grep -q tracing {} 2> /dev/null && echo {}" \;)
     cp BenchmarkLogger.java ${N_PATCHED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     java -jar transformer.jar $filtered
     # note: the first suite built must be file-logged because we would otherwise lose all the transformations done above

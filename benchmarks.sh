@@ -17,8 +17,8 @@ PERF_SUITE_DUMP_LOC="/tmp/narayana-performance-tests-dump"
 #
 # the config below is the default one which is used
 # if no config string is passed to the script
-#BENCHMARK_COMMON_CONFIG=" -f 1 -wi 1 -i 1"
-BENCHMARK_COMMON_CONFIG=" -r 30 -f 2 -wi 20 -i 10 "
+BENCHMARK_COMMON_CONFIG=" -f 1 -wi 1 -i 1"
+#BENCHMARK_COMMON_CONFIG=" -r 30 -f 2 -wi 20 -i 10 "
 
 function prepareEnv {
     # create a folder into which all the perf test results will be dumped into

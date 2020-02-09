@@ -19,7 +19,7 @@
 #
 # script dependencies : xmlstarlet (ugly, but still better than depending on sed magic :-) )
 
-set -eux
+set -e #ux
 
 # Narayana sources defitions
 N_PATCHED=${HOME}"/git/narayana"
@@ -98,7 +98,8 @@ function build {
     cp BenchmarkLogger.java ${N_PATCHED}"/ArjunaCore/arjuna/classes/com/arjuna/ats/arjuna/logging/"
     java -jar transformer.jar $filtered
     # note: the first suite built must be file-logged because we would otherwise lose all the transformations done above
-    for regularPerfTest in file-logged tracing-off jaeger noop ; do buildNarayana "$regularPerfTest" ; done
+    tests="file-logged tracing-off jaeger noop"
+    for regularPerfTest in $tests ; do buildNarayana "$regularPerfTest" ; done
     tree -D ~/.m2/repository/org/jboss/narayana/narayana-perf
 }
 

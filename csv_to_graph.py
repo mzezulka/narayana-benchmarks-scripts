@@ -41,9 +41,8 @@ for f in sorted(sys.argv[1:]):
         dataTriples[lastSeenNarayana] = []
     for line in pd.read_csv(f).groupby(["Benchmark", "Threads", "Score"]):
         (name, threads, score) = line[0]
-        threads = math.log(int(threads), 2)
         # Benchmark contains fully qualified test class names, let's trim the name a bit
-        name = '/'.join(name.split('.')[-2:])
+        name = '/'.join(name.split('.')[-1:])
         dataTriples[lastSeenNarayana].append((name, threads, score))
         if name not in namesMap.keys(): 
             namesMap[name] = highestColIndex

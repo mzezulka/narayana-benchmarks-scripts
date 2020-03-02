@@ -87,7 +87,7 @@ function runSuite {
     printPerftestSuiteFooter
 }
 
-function run {    
+function run {
     prepareEnv    
 
     for suite in suites/*.jar

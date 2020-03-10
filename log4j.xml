@@ -1,17 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
   <Appenders>
   <!-- Async Loggers will auto-flush in batches, so switch off immediateFlush. -->
-    <RandomAccessFile name="RandomAccessFile" fileName="async.log" immediateFlush="false" append="false">
+    <RandomAccessFile name="file" fileName="async.log" immediateFlush="false" append="false">
       <PatternLayout>
         <Pattern>%d %p %c{1.} [%t] %m %ex%n</Pattern>
       </PatternLayout>
     </RandomAccessFile>
+    <appender name="console" class="org.apache.log4j.ConsoleAppender">
+      <param name="Target" value="System.out"/>
+      <layout class="org.apache.log4j.PatternLayout">
+        <param name="ConversionPattern" value="%d{ABSOLUTE} {%8.8t} (%x) [%-5p,%-10c{1}] %m%n"/>
+      </layout>
+    </appender>
   </Appenders>
-  <Loggers>
-    <Root level="info" />
-    <Logger name="fileLog" level="info" includeLocation="false">
-      <AppenderRef ref="RandomAccessFile"/>
-    </Logger>
-  </Loggers>
-</Configuration>
+      <category name="org.ow2.carol">
+        <level value="WARN"/>
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </category>
+
+    <category name="com.atomikos">
+        <level value="WARN"/>
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </category>
+    <category name="org.jboss.narayana.rts">
+        <level value="WARN"/>
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </category>
+
+    <category name="org.jboss.resteasy">
+        <level value="WARN"/>
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </category>
+
+    <category name="org.jboss.jbossts.star.service">
+        <level value="WARN"/>
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </category>
+
+    <category name="com.arjuna">
+        <level value="TRACE"/>
+        <appender-ref ref="file"/>
+    </category> 
+</log4j:configuration>

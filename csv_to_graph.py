@@ -48,17 +48,51 @@ for f in sorted(sys.argv[1:]):
             namesMap[name] = highestColIndex
             highestColIndex += 1
 
-fig = make_subplots(rows=1, cols=len(namesMap.keys()), subplot_titles=list(namesMap.keys()))
-dotSize = 16
+fig = make_subplots(
+        rows=len(namesMap.keys()),
+        shared_xaxes=True,
+        cols=1,
+        subplot_titles=list(namesMap.keys()),
+        x_title="Number of Threads (-t JMH arg)",
+        y_title="Operations Per Second")
+dotSize = 10
 for narayanaType in dataTriples.keys():
     oneType = dataTriples[narayanaType]
     if(oneType is None or len(oneType) == 0):
         print("Empty result set for '" + narayanaType + "', skipping...")
         continue
     (name, threads, score) = oneType[0]
-    fig.add_trace(go.Scatter(x=[threads], y=[score], name=narayanaType, legendgroup=narayanaType, marker_size=dotSize, marker_color=assignRgbTriple(narayanaType)), row=1, col=namesMap[name])
+    fig.add_trace(go.Scatter(
+                     x=[threads],
+                     y=[score],
+                     name=narayanaType,
+                     legendgroup=narayanaType,
+                     marker_size=dotSize,
+                     marker_color=assignRgbTriple(narayanaType)),
+                     row=namesMap[name],
+                     col=1)
     for (name, threads, score) in oneType[1:]:
-       fig.add_trace(go.Scatter(showlegend=False, x=[threads], y=[score], name=narayanaType, legendgroup=narayanaType, marker_size=dotSize, marker_color=assignRgbTriple(narayanaType)), row=1, col=namesMap[name])
+       fig.add_trace(go.Scatter(
+                        showlegend=False,
+                        x=[threads],
+                        y=[score],
+                        name=narayanaType,
+                        legendgroup=narayanaType,
+                        marker_size=dotSize,
+                        marker_color=assignRgbTriple(narayanaType)),
+                        row=namesMap[name],
+                        col=1)
 
+fig.update_xaxes(type="category")
+fig.update_yaxes(type="log")
+fig.update_layout(
+title_text="Narayana OpenTracing Integration Performance Tests",
+    width=800,
+    font=dict(
+        family="Arial",
+        size=12,
+        color="#1f1f1f"
+    )
+)
 fig.show()
 

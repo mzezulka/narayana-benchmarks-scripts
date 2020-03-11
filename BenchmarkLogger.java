@@ -2,6 +2,7 @@ package com.arjuna.ats.arjuna.logging;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.FileNotFoundException;
 import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -37,7 +38,11 @@ public final class BenchmarkLogger {
         LOGGER.info(UUID.randomUUID() + " " + MSG);
         if(NUM_WRITES.getAndIncrement() >= MAX_NUM_WRITES) {
             LOGGER.info("Emptying log file...");
-            new PrintWriter(FILE_PATH).close();
+            try {
+                new PrintWriter(FILE_PATH).close();
+            } catch(FileNotFoundException fnfe) {
+                throw new RuntimeException(fnfe);
+            }
         }
     }
 }

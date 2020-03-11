@@ -2,8 +2,6 @@ package com.arjuna.ats.arjuna.logging;
 
 import java.io.IOException;
 import java.io.File;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;

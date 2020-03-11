@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class BenchmarkLogger {
     private static final Logger LOGGER = Logger.getLogger("MyLog");
     private static final AtomicInteger NUM_WRITES = new AtomicInteger();
-    private static final String FILE_PATH = "/tmp/narayana-benchmark-" + new Timestamp(new Date().getTime()).getTime();
+    private static final String FILE_PATH = "/tmp/narayana-benchmark.txt";
     private static FileHandler FH;
     private static final String MSG = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
             + " do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "

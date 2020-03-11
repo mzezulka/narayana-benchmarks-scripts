@@ -77,7 +77,8 @@ function runSuite {
         dump=${name}"-"${tNo}"threads.csv"
         config="${BENCHMARK_COMMON_CONFIG} -t ${tNo}"
         touch $dump
-        sysProp=" -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.configurationFile=$logConfigName  "
+        # sysProp=" -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.configurationFile=$logConfigName  "
+        sysProp=""
         # there will be probably more implementations tested in the very near future
         if [ "x"$name == "xjaeger" ] ; then sysProp=${sysProp}" -Dtracing="$name ; fi
         if [ "x"$name == "xtracing-off" ] ; then sysProp=${sysProp}" -Dorg.jboss.narayana.tracingActivated=false "; fi

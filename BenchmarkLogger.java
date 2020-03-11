@@ -1,7 +1,7 @@
 package com.arjuna.ats.arjuna.logging;
 
 import java.io.IOException;
-import java.io.File;
+import java.io.PrintWriter;
 import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -36,18 +36,8 @@ public final class BenchmarkLogger {
     public static void logMessage() {
         LOGGER.info(UUID.randomUUID() + " " + MSG);
         if(NUM_WRITES.getAndIncrement() >= MAX_NUM_WRITES) {
-            FH.flush();
-            FH.close();
-            NUM_WRITES.set(0);
-            LOGGER.removeHandler(FH);
             LOGGER.info("Emptying log file...");
-            new File(FILE_PATH).delete();
-            try {
-                FH = new FileHandler(FILE_PATH, 1_000_000, 1);
-            } catch(IOException ioe) {
-                throw new RuntimeException(ioe);
-            }
-            LOGGER.addHandler(FH);
+            new PrintWriter(FILE_PATH).close();
         }
     }
 }

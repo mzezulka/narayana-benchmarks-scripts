@@ -38,6 +38,7 @@ public final class BenchmarkLogger {
         LOGGER.info(UUID.randomUUID() + " " + MSG);
         if(NUM_WRITES.getAndIncrement() >= MAX_NUM_WRITES) {
             LOGGER.info("Emptying log file...");
+            NUM_WRITES.set(0);
             try {
                 new PrintWriter(FILE_PATH).close();
             } catch(FileNotFoundException fnfe) {

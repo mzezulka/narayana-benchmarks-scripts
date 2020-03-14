@@ -94,7 +94,7 @@ function run {
     fileLogged="suites/file-logged.jar"
     for suite in suites/*.jar
     do
-      [$suite -neq "$fileLogged" ] && runSuite $suite
+      [ "$suite" != "$fileLogged" ] && runSuite $suite
     done
     [ -f "$fileLogged" ] && runSuite $fileLogged
     displayPerftestResults

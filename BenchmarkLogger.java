@@ -15,16 +15,17 @@ public final class BenchmarkLogger {
     private static final AtomicInteger NUM_WRITES = new AtomicInteger();
     private static final String FILE_PATH = "/tmp/narayana-benchmark.txt";
     private static FileHandler FH;
+    private static final int DUMP_LOG_SIZE_BYTES = 100_000_000;
     private static final String MSG = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
             + " do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
             + "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
-    private static final int MAX_NUM_WRITES = 250_000_000 / MSG.length();
+    private static final int MAX_NUM_WRITES = DUMP_LOG_SIZE_BYTES / MSG.length();
 
     static {
         try {
             LOGGER.setUseParentHandlers(false);
             LOGGER.setLevel(Level.ALL);
-            FH = new FileHandler(FILE_PATH, 500_000_000, 1);
+            FH = new FileHandler(FILE_PATH, DUMP_LOG_SIZE_BYTES, 1);
             FH.setLevel(Level.ALL);
             LOGGER.addHandler(FH);
             SimpleFormatter formatter = new SimpleFormatter();

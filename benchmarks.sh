@@ -71,7 +71,7 @@ function runSuite {
 
     printPerftestSuiteHeader "$name"
     pushd $PERF_SUITE_DUMP_LOC
-    tArr="04 08"
+    tArr="01 02 04 08"
     for tNo in $tArr ;
     do
         dump=${name}"-"${tNo}"threads.csv"

@@ -18,7 +18,7 @@ public final class BenchmarkLogger {
     private static final String MSG = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
             + " do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
             + "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
-    private static final int MAX_NUM_WRITES = 500_000_000 / MSG.length();
+    private static final int MAX_NUM_WRITES = 250_000_000 / MSG.length();
 
     static {
         try {

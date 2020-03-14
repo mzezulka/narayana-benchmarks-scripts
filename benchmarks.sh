@@ -71,7 +71,7 @@ function runSuite {
 
     printPerftestSuiteHeader "$name"
     pushd $PERF_SUITE_DUMP_LOC
-    tArr="01 02 04 08 16 32 64"
+    tArr="01 02 04 08 16"
     for tNo in $tArr ;
     do
         dump=${name}"-"${tNo}"threads.csv"
@@ -88,14 +88,16 @@ function runSuite {
     printPerftestSuiteFooter
 }
 
+# Enforce file-logged benchmarks to run last
 function run {
     prepareEnv    
-
+    fileLogged="suites/file-logged.jar"
     for suite in suites/*.jar
     do
-      runSuite $suite
+      [$suite -neq "$fileLogged" ] && runSuite $suite
     done
-        displayPerftestResults
+    [ -f "$fileLogged" ] && runSuite $fileLogged
+    displayPerftestResults
 }
 
 run

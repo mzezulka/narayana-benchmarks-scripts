@@ -7,7 +7,7 @@ set -eux
 
 PERF_SUITE_LOC=${HOME}"/git/narayana-performance/narayana/ArjunaCore/arjuna/target/benchmarks.jar"
 TODAY=$(date '+%d-%m-%Y')
-PERF_SUITE_DUMP_LOC="~/Documents/narayana-performance-tests-$TODAY"
+PERF_SUITE_DUMP_LOC="${HOME}/Documents/narayana-performance-tests/$TODAY"
 
 # this configuration string is used for the benchmark itself
 # for more info, see java -jar <benchmarks_file.jar> -h

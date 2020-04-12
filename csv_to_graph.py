@@ -9,7 +9,7 @@ import math
 from plotly.subplots import make_subplots
 
 types = [ "file-logged", "noop", "jaeger", "vanilla", "tracing-off" ]
-rgbTriples = { "file-logged" : "255, 25, 25", "noop" : "25, 25, 255", "jaeger" : "25, 255, 25", "vanilla" : "25, 25, 25", "tracing-off" : "240, 240, 25"  }
+rgbTriples = { "file-logged" : "254, 232, 200", "noop" : "254, 232, 200", "jaeger" : "227, 74, 51", "vanilla" : "253, 187, 132", "tracing-off" : "254, 232, 200"  }
 
 def assignRgbTriple(t):
     if t in rgbTriples:
@@ -43,6 +43,8 @@ for f in sorted(sys.argv[1:]):
         (name, threads, score) = line[0]
         # Benchmark contains fully qualified test class names, let's trim the name a bit
         name = '/'.join(name.split('.')[-1:])
+        if(name != "twoPhaseCommit"):
+            continue
         dataTriples[lastSeenNarayana].append((name, threads, score))
         if name not in namesMap.keys(): 
             namesMap[name] = highestColIndex
@@ -62,23 +64,23 @@ for narayanaType in dataTriples.keys():
         print("Empty result set for '" + narayanaType + "', skipping...")
         continue
     (name, threads, score) = oneType[0]
-    fig.add_trace(go.Scatter(
+    fig.add_trace(go.Bar(
                      x=[threads],
                      y=[score],
                      name=narayanaType,
                      legendgroup=narayanaType,
-                     marker_size=dotSize,
+                     # marker_size=dotSize,
                      marker_color=assignRgbTriple(narayanaType)),
                      row=namesMap[name],
                      col=1)
     for (name, threads, score) in oneType[1:]:
-       fig.add_trace(go.Scatter(
+       fig.add_trace(go.Bar(
                         showlegend=False,
                         x=[threads],
                         y=[score],
                         name=narayanaType,
                         legendgroup=narayanaType,
-                        marker_size=dotSize,
+                        # marker_size=dotSize,
                         marker_color=assignRgbTriple(narayanaType)),
                         row=namesMap[name],
                         col=1)
@@ -86,7 +88,7 @@ for narayanaType in dataTriples.keys():
 fig.update_xaxes(type="category")
 fig.update_yaxes(type="log")
 fig.update_layout(
-title_text="Narayana OpenTracing Integration Performance Tests",
+    barmode='group',
     width=800,
     font=dict(
         family="Arial",
